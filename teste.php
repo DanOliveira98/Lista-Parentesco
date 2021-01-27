@@ -12,7 +12,7 @@ class desafioTurim
 
     }
 
-    public function salvar()
+    public function salvar($json)
     {
 
     }
@@ -56,14 +56,14 @@ class desafioTurim
         <div class="row">
             <div class="col-lg-3">
                 <table id="tabela" style="display: none" class="col-12">
-                    <div class="container">
+                    <div class="col-12">
                         <thead>
-                            <tr class="text-center">
-                                <th>Pessoas</th>
-                            </tr>
+                        <tr class="text-center">
+                            <th>Pessoas</th>
+                        </tr>
                         </thead>
                     </div>
-                    <tbody id="corpo_tabela">
+                    <tbody id="corpo_tabela" class="col-12">
                     </tbody>
                 </table>
             </div>
@@ -82,31 +82,38 @@ class desafioTurim
 
     function incluir() {
         var name = document.getElementById("name").value;
-        pessoas.pessoas.push({'name': name});
+        pessoas.pessoas.push({'name': name, 'filhos': []});
         console.log(pessoas);
         document.getElementById('tabela').style.display = 'block';
         var corpo = document.getElementById('corpo_tabela');
+        var div = document.createElement('div');
+        div.setAttribute('id', 'div_'+name);
         var linha = document.createElement('tr');
         linha.setAttribute('id', name);
-        linha.classList.add('row', 'ml-3', 'mt-3');
+        linha.classList.add('row', 'mt-3');
         var sublinha = document.createElement('td');
-        sublinha.classList.add('col-6');
+        sublinha.classList.add('col-12');
+        sublinha.setAttribute('id', 'sublinha_'+name);
         var linhaBotao = document.createElement('button');
         var filho = document.createElement('button');
         filho.classList.add('mt-2', 'col-12');
         linhaBotao.setAttribute('class', '_button');
-        linhaBotao.classList.add('col-6');
+        linhaBotao.classList.add('col-8', 'ml-5');
         linhaBotao.setAttribute('id', 'id_' + name);
         linhaBotao.addEventListener('click', remove);
+        filho.addEventListener('click', inserirFilho);
+        filho.setAttribute('id', 'id_filho_' + name);
+        filho.setAttribute('style', 'width: 280px;');
         var nameBotao = document.createTextNode('Remover');
         var botaoFilho = document.createTextNode('Adicionar Filho');
         sublinha.append(name);
+        sublinha.append(linhaBotao);
         filho.append(botaoFilho);
         linhaBotao.append(nameBotao)
         linha.appendChild(sublinha);
-        linha.appendChild(linhaBotao);
-        linha.appendChild(filho);
-        corpo.appendChild(linha);
+        div.appendChild(linha);
+        filho ? div.appendChild(filho) : null;
+        corpo.appendChild(div);
         pessoas.pessoas ? document.getElementById('json').value = JSON.stringify(pessoas) : null;
     }
 
@@ -121,8 +128,43 @@ class desafioTurim
         pessoas.pessoas = arPessoa;
         pessoas.pessoas ? document.getElementById('json').value = JSON.stringify(pessoas) : null;
     }
-    function inserirFilho(event){
 
+    function inserirFilho(event) {
+        console.log(event);
+        const filho = prompt('Informe o nome');
+        const element = event.target.id;
+        const item = element.split('_').pop();
+        const arPessoa = [];
+        arPessoa.push(pessoas.pessoas.find(resp => resp.name == item));
+        console.log(arPessoa[0].filhos);
+        arPessoa[0].filhos.push({
+                'name': filho
+        });
+        console.log(arPessoa);
+        pessoas.pessoas[arPessoa] = arPessoa;
+        console.log(pessoas.pessoas[arPessoa][0].name);
+        let corpo = document.getElementById(pessoas.pessoas[arPessoa][0].name);
+        console.log(corpo);
+        let linha = document.createElement('td');
+        linha.classList.add('col-12');
+        linha.append(filho);
+        let linhaBotao = document.createElement('button');
+        linhaBotao.setAttribute('class', '_button');
+        linhaBotao.setAttribute('id', 'id_' + name);
+        linhaBotao.classList.add('col-8', 'ml-5');
+        var nameBotao = document.createTextNode('Remover filho');
+        linhaBotao.append(nameBotao);
+        linhaBotao.addEventListener('click', removeFilho);
+        linha.appendChild(linhaBotao);
+        corpo.appendChild(linha);
+        pessoas.pessoas ? document.getElementById('json').value = JSON.stringify(pessoas) : null;
+    }
+    function removeFilho(event){
+        console.log(event);
+        const element = event.target.id;
+        console.log(element);
+        const item = element.split('_').pop();
+        console.log(item);
     }
 
 </script>
