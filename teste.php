@@ -1,19 +1,73 @@
 <?php
 
+
 class desafioTurim
 {
-    public function criarDb()
-    {
-
-    }
-
     public function conectar()
     {
 
+        $conn = new mysqli('localhost', 'root', 'Dan1452#', 'desafioturim');
+        if ($conn->connect_error) {
+            die("Connection failed: " . $conn->connect_error);
+        } else {
+            return $conn;
+        }
+    }
+
+    public function criarDb()
+    {
+        $conexao = $this->conectar();
+        $pessoa = "CREATE TABLE Pessoa (
+                    id INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                    name VARCHAR(30) NOT NULL
+                );";
+//        var_dump($pessoa);die();
+        if ($conexao->query($pessoa) === TRUE) {
+            echo 'Criou a Tabela de';
+        } else {
+            return "Error creating table: " . $conexao->error;
+        }
+        $filhos = "CREATE TABLE Filhos (
+                    id INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                    name VARCHAR(30) NOT NULL,
+                    pessoa INT(6)
+                );";
+        if ($conexao->query($filhos) === TRUE) {
+            echo 'Criou a Tabela de Filhos';
+        } else {
+            echo "Error creating table: " . $conexao->error;
+        }
+        $fk = "alter table Filhos add constraint fk_pessoa foreign key (pessoa) references Pessoa (id)";
+        if ($conexao->query($fk) === TRUE) {
+            echo 'Criou a Tabela de Filhos';
+        } else {
+            echo "Error creating table: " . $conexao->error;
+        }
+        return true;
     }
 
     public function salvar($json)
     {
+        $conexao = $this->conectar();
+        foreach ($json as $item) {
+            if ($item['name']) {
+                $sql = " insert into pessoa (name) values ('{$item['name']}')";
+                $conexao->query($sql);
+                $idPessoa = $conexao->insert_id;
+                if ($conexao->query($sql) === TRUE) {
+                    if (array_key_exists("filhos", $item)) {
+                        foreach ($item['filhos'] as $filho) {
+                            echo $filho['name'];
+                            $sqlFilho = "insert into filhos (name, pessoa) values ('{$filho['name']}', {$idPessoa});";
+                            $conexao->query($sqlFilho);
+                        }
+                    }
+                } else {
+                    echo "Error: " . $sql . "<br>" . $conexao->error;
+                }
+            }
+
+        }
 
     }
 
@@ -23,6 +77,13 @@ class desafioTurim
     }
 }
 
+if ($_REQUEST) {
+    if ($_REQUEST['rq'] == 'gravar') {
+        $gravar = new desafioTurim();
+//        $gravar->criarDb();
+        $result = $gravar->salvar($_REQUEST['data']);
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -40,13 +101,13 @@ class desafioTurim
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"
             integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy"
             crossorigin="anonymous"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <title>Desafio Turim</title>
 </head>
 <body>
 <div class="mt-2">
-
-    <button class="btn">Gravar</button>
-    <button class="btn" onclick="listar();">Ler</button>
+    <button class="btn" onclick="gravar()">Gravar</button>
+    <button class="btn" onclick="">Ler</button>
     <br>
     <br>
     <div>
@@ -87,23 +148,24 @@ class desafioTurim
         document.getElementById('tabela').style.display = 'block';
         var corpo = document.getElementById('corpo_tabela');
         var div = document.createElement('div');
-        div.setAttribute('id', 'div_'+name);
+        div.setAttribute('id', 'div_' + name);
         var linha = document.createElement('tr');
         linha.setAttribute('id', name);
         linha.classList.add('row', 'mt-3');
         var sublinha = document.createElement('td');
         sublinha.classList.add('col-12');
-        sublinha.setAttribute('id', 'sublinha_'+name);
+        sublinha.setAttribute('id', 'sublinha_' + name);
         var linhaBotao = document.createElement('button');
         var filho = document.createElement('button');
         filho.classList.add('mt-2', 'col-12');
         linhaBotao.setAttribute('class', '_button');
-        linhaBotao.classList.add('col-8', 'ml-5');
+        linhaBotao.classList.add('col-6', 'float-right');
         linhaBotao.setAttribute('id', 'id_' + name);
         linhaBotao.addEventListener('click', remove);
         filho.addEventListener('click', inserirFilho);
         filho.setAttribute('id', 'id_filho_' + name);
-        filho.setAttribute('style', 'width: 280px;');
+        filho.setAttribute('style', 'width: 400px;');
+        filho.classList.add('col-12');
         var nameBotao = document.createTextNode('Remover');
         var botaoFilho = document.createTextNode('Adicionar Filho');
         sublinha.append(name);
@@ -123,7 +185,7 @@ class desafioTurim
         console.log(element);
         const item = element.split('_').pop();
         console.log(item);
-        document.getElementById(item).style.display = 'none';
+        document.getElementById('div_' + item).style.display = 'none';
         const arPessoa = pessoas.pessoas.filter(resp => resp.name != item);
         pessoas.pessoas = arPessoa;
         pessoas.pessoas ? document.getElementById('json').value = JSON.stringify(pessoas) : null;
@@ -136,9 +198,9 @@ class desafioTurim
         const item = element.split('_').pop();
         const arPessoa = [];
         arPessoa.push(pessoas.pessoas.find(resp => resp.name == item));
-        console.log(arPessoa[0].filhos);
+        console.log(arPessoa);
         arPessoa[0].filhos.push({
-                'name': filho
+            'name': filho
         });
         console.log(arPessoa);
         pessoas.pessoas[arPessoa] = arPessoa;
@@ -147,11 +209,13 @@ class desafioTurim
         console.log(corpo);
         let linha = document.createElement('td');
         linha.classList.add('col-12');
+        linha.setAttribute('id', 'linha_' + filho);
         linha.append(filho);
         let linhaBotao = document.createElement('button');
         linhaBotao.setAttribute('class', '_button');
-        linhaBotao.setAttribute('id', 'id_' + name);
-        linhaBotao.classList.add('col-8', 'ml-5');
+        linhaBotao.setAttribute('id', 'id_filho_' + filho);
+        linhaBotao.setAttribute('name', 'id_filho_' + pessoas.pessoas[arPessoa][0].name);
+        linhaBotao.classList.add('col-6', 'float-right');
         var nameBotao = document.createTextNode('Remover filho');
         linhaBotao.append(nameBotao);
         linhaBotao.addEventListener('click', removeFilho);
@@ -159,12 +223,38 @@ class desafioTurim
         corpo.appendChild(linha);
         pessoas.pessoas ? document.getElementById('json').value = JSON.stringify(pessoas) : null;
     }
-    function removeFilho(event){
+
+    function removeFilho(event) {
         console.log(event);
+        const pai = event.target.name;
         const element = event.target.id;
         console.log(element);
         const item = element.split('_').pop();
-        console.log(item);
+        itemPai = pai.split('_').pop();
+        console.log(pessoas.pessoas[0].filhos);
+        const arPessoa = [];
+        arPessoa.push(pessoas.pessoas.find(resp => resp.name == itemPai));
+        console.log(pessoas.pessoas[arPessoa][0].filhos);
+        const arFilho = pessoas.pessoas[arPessoa][0].filhos.filter(resp => resp.name != item);
+        pessoas.pessoas[arPessoa][0].filhos = arFilho;
+        document.getElementById('linha_' + item).style.display = 'none';
+        pessoas.pessoas ? document.getElementById('json').value = JSON.stringify(pessoas) : null;
+    }
+
+    function gravar() {
+        $.ajax({
+            url: window.location,
+            type: 'POST',
+            dataType: 'json',
+            data:
+                {
+                    rq: 'gravar',
+                    data: pessoas.pessoas
+                },
+            success: function (resp) {
+                alert('ta chegando');
+            }
+        })
     }
 
 </script>
