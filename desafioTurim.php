@@ -4,9 +4,11 @@ if ($_REQUEST) {
     if ($_REQUEST['rq'] == 'gravar') {
         $desafio = new Desafio();
         $tabela = $desafio->verificaTabela();
+
         /**
          * verificação pra saber se as tabelas já existem, não existindo, chama-se a função para criar a tabela;
          */
+
         if (!$tabela) {
             $desafio->criarDb();
         }

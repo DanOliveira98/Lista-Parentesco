@@ -41,13 +41,16 @@ function removeFilho(filho, pessoa) {
     const arPessoa = [];
     arPessoa.push(pessoas.pessoas.find(resp => resp.name == pessoa));
     let arCompare = arPessoa[0];
+    console.log(arPessoa);
     const arFilho = arPessoa[0]['filhos'].filter(resp => resp.name != filho);
     pessoas.pessoas.forEach(function (val, index){
         if (val == arCompare){
             pessoas.pessoas[index]['filhos'] = arFilho;
         }
     });
-    document.getElementById('linha_' + filho).style.display = 'none';
+    if (filho){
+        document.getElementById('linha_' + filho).style.display = 'none';
+    }
     pessoas.pessoas ? document.getElementById('json').value = JSON.stringify(pessoas) : null;
 }
 
@@ -91,6 +94,7 @@ function ler() {
     });
 }
 function verificaDados(dados){
+    console.log(dados);
     if (dados[0]){
         console.log('teste');
         montaTabelaPessoa(dados);
@@ -120,6 +124,7 @@ function montaTabelaPessoa(dados) {
                 "</tr>"
             );
             $('#corpo_tabela').append(linha);
+            console.log(val.filhos);
             if (val.filhos) {
                 montaTabelaFilho(val.filhos, '#' + idFilhos, val.name);
             }
@@ -131,15 +136,19 @@ function montaTabelaPessoa(dados) {
 function montaTabelaFilho(filhos, selector, pessoa) {
     if (Array.isArray(filhos)) {
         filhos.forEach(function (valor, index) {
-            let id = valor.name;
-            let idFilhos = 'linha_' + valor.name;
-            const filhos = $(
-                "<td style='background-color: #e0e0e0' class='mt-2 row' id='" + idFilhos + "'>"
-                + "<p class='col-6'>" + valor.name + "</p>" +
-                "<button class='col-6 float-right' onclick='removeFilho(\"" + id + "\",\"" + pessoa + "\");'>Remover Filho</button>" +
-                "</td>"
-            );
-            $(selector).append(filhos);
+            if (valor.name){
+                let id = valor.name;
+                let idFilhos = 'linha_' + valor.name;
+                const filhos = $(
+                    "<td style='background-color: #e0e0e0' class='mt-2 row' id='" + idFilhos + "'>"
+                    + "<p class='col-6'>" + valor.name + "</p>" +
+                    "<button class='col-6 float-right' onclick='removeFilho(\"" + id + "\",\"" + pessoa + "\");'>Remover Filho</button>" +
+                    "</td>"
+                );
+                $(selector).append(filhos);
+            }else{
+                removeFilho(valor.name, pessoa);
+            }
         });
     }else{
         let id = filhos;

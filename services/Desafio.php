@@ -8,7 +8,7 @@ class Desafio
      */
     public function conectar()
     {
-        $conn = new mysqli('localhost', 'root', '14523563', 'desafioturim');
+        $conn = new mysqli('localhost', 'root', 'Dan1452#', 'desafioturim');
         if ($conn->connect_error) {
             return "Connection failed: " . $conn->connect_error;
         }
@@ -81,7 +81,7 @@ class Desafio
     public function retornaJson()
     {
         $conexao = $this->conectar();
-        $dados = $conexao->query("select distinct p.name as pessoas, GROUP_CONCAT(f.name separator '; ') as filhos from desafioturim.pessoas p join desafioturim.filhos f on p.id = f.pessoa group BY p.name limit 100;");
+        $dados = $conexao->query("select distinct p.name as pessoas, GROUP_CONCAT((select name from desafioturim.filhos f where p.id = f.pessoa) separator  '; ') as filhos from desafioturim.pessoas p group BY p.name limit 100;");
         $dados = $dados->fetch_all();
         $json['pessoas'] = [];
         foreach ($dados as $i => $item) {
@@ -109,7 +109,7 @@ class Desafio
     public function verificaTabela()
     {
         $conexao = $this->conectar();
-        $result = $conexao->query("show tables like 'Pessoas' and tables like 'Filhos'");
+        $result = $conexao->query("show tables like 'pessoas' and tables like 'filhos'");
         return ($result->num_rows > 0);
     }
 }
