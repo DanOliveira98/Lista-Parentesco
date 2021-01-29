@@ -81,7 +81,7 @@ class Desafio
     public function retornaJson()
     {
         $conexao = $this->conectar();
-        $dados = $conexao->query("select distinct p.name as pessoas, GROUP_CONCAT((select name from desafioturim.filhos f where p.id = f.pessoa) separator  '; ') as filhos from desafioturim.pessoas p group BY p.name limit 100;");
+        $dados = $conexao->query("select distinct p.name as pessoas, (select group_concat((name) separator ';') as filhos from desafioturim.filhos f where p.id = f.pessoa) as filhos from desafioturim.pessoas p group BY p.name;");
         $dados = $dados->fetch_all();
         $json['pessoas'] = [];
         foreach ($dados as $i => $item) {
